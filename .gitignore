@@ -1,0 +1,11 @@
+# Cloned repositories (managed independently, populated by prompts/init.md)
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.suo
+*.user
+.vs/
