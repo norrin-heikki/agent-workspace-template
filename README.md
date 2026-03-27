@@ -11,13 +11,20 @@ A reusable template for managing multiple repositories under a single workspace.
    cd my-workspace
    ```
 
-2. Clone the customer's repositories into the workspace:
+2. Remove the template's git history and start fresh:
+
+   ```bash
+   rm -rf .git
+   git init
+   ```
+
+3. Clone the repositories into the workspace:
 
    ```bash
    git clone <repo-url> <directory-name>
    ```
 
-3. Run the initialization prompt (`prompts/init.md`) with an AI agent (Claude Code, Cursor, etc.) from the workspace root. It will:
+4. Run the initialization prompt (`prompts/init.md`) with an AI agent (Claude Code, Cursor, etc.) from the workspace root. It will:
 
    - Discover all cloned repos
    - Populate `AGENTS.md` with a repository table
