@@ -11,14 +11,16 @@ Determine the repository name from the current working directory.
 
 You are auditing this repository to produce two deliverables:
 
-1. **Detailed documentation** under `docs/agents/` — one file per applicable area (see output table below). **Skip files entirely** for areas that do not apply.
-2. **`AGENTS.md`** at the repository root — a concise agent brief that links to the docs above.
+1. **`AGENTS.md`** at the repository root — the agent constitution. Minimal, human-authored-style, judgment-layer content only. This is the primary deliverable.
+2. **Detailed documentation** under `docs/agents/` — human reference files for onboarding and deep dives. These are **not agent context** — they exist for humans and for agents to read on demand when they need detail on a specific area. **Skip files entirely** for areas that do not apply.
 
-If `docs/agents/` already contains files from a previous audit, this is an **incremental update**. Read every existing file first, preserve what is still accurate, update what has changed, and remove what no longer applies. Note meaningful changes at the top of each updated file in a `## Changelog` section (date + one-liner).
+**Design principle:** Only put content in `AGENTS.md` that an agent cannot discover by reading the repo itself. Facts the agent can derive (tech stack from `package.json`, project structure from the filesystem, linter rules from config files) belong in `docs/agents/` as human reference — not in the agent constitution. Research shows that unnecessary instructions in context files actively harm agent performance by broadening exploration and increasing reasoning cost (Gloaguen et al., 2026).
+
+If `docs/agents/` already contains files from a previous audit, this is an **incremental update**. Read every existing file first, preserve what is still accurate, update what has changed, and remove what no longer applies. Note meaningful changes at the top of each updated file in a `## Changelog` section (date + one-liner). Keep only the **last 5 entries** — remove older ones to prevent unbounded growth.
 
 **Disclosure principles (apply to all output):** no secrets, environment **names** only, no private/internal URLs. For sensitive configuration, name the variable and where it is configured (e.g. `.env.example`, CI), not the value.
 
-**Output files** (create only those that apply):
+**Human reference files** (create only those that apply under `docs/agents/`):
 
 | File | Area | Typical topics |
 |------|------|----------------|
@@ -99,11 +101,20 @@ Explore the repository and gather facts. For each item below, read the relevant 
 - **Security / auth** — OIDC/OAuth flows, API keys policy (where stored, never values), CSRF/CORS notes if relevant.
 - **Contributing / releases** — `CONTRIBUTING.md`, branch/version policy, changelog/release docs, linters/formatters and how CI enforces them.
 
+**Judgment layer analysis** (critical — this feeds AGENTS.md)
+
+Identify the things an agent **cannot** discover from toolchain config or file structure alone:
+- Domain-specific constraints (e.g. "all writes must be ACID-compliant", "offline support is required")
+- Architectural boundaries that are judgment calls, not enforced by tools (e.g. "no direct DB access from controllers")
+- Dangerous areas where mistakes have outsized consequences (e.g. "billing logic requires extra review")
+- Non-obvious conventions that differ from framework defaults
+- Human-in-the-loop triggers specific to this project
+
 ---
 
-### Phase 2: Write Documentation
+### Phase 2: Write Human Reference Documentation
 
-Write each applicable file under `docs/agents/`. Create the directory if it doesn't exist. Each file should be **self-contained** and **substantive** — not a single sentence. Cite real paths, tools, and workflows.
+Write each applicable file under `docs/agents/`. Create the directory if it doesn't exist. These files are **detailed human reference** — they exist for onboarding developers and for agents to read on demand when working in a specific area. They are not loaded into agent context by default.
 
 **`docs/agents/overview.md`** — always created:
 
@@ -175,40 +186,70 @@ This is the level of detail expected. Adapt the content to whatever frameworks a
 
 ### Phase 3: Generate AGENTS.md
 
-Create or update **`AGENTS.md` at the repository root** using findings from Phases 1–2.
+Create or update **`AGENTS.md` at the repository root**. This is the **agent constitution** — it follows the ASDLC anatomy and contains only what agents cannot discover from the repo itself.
 
-You are documenting this repository for AI coding agents (Cursor, Copilot, Claude Code, etc.).
+**Design rule:** Before adding anything to `AGENTS.md`, ask: "Can the agent find this by reading a config file, `package.json`, directory listing, or running a command?" If yes, it does not belong here. If a linter, formatter, or type checker enforces a rule, do not restate it — the tool is the enforcement mechanism.
 
-**Goal:** Give agents enough context to work productively, with clear pointers to the detailed docs. Do not duplicate long guides — summarize briefly and link.
+**Required structure:**
 
-**Required sections:**
+```markdown
+# AGENTS.md
 
-- **Overview** — what the project is and main technologies (short).
-- **Architecture** — layers or services; optional small diagram or bullet list.
-- **Local development** — prerequisites, how to run, ports; placeholder env vars only.
-- **Common commands** — dev, test, lint, build, migrations/deploy helpers if applicable.
-- **Conventions** — naming, formatting, patterns agents must follow; forbidden patterns if any.
-- **Quality gates** — what must pass before a PR (match CI where possible).
-- **Key paths** — entry points, main packages/apps, test locations.
+> **Project:** <one-line description of purpose and domain>
+> **Core constraint:** <the single most important non-obvious constraint>
 
-**Documentation (required):** Add a subsection or table that **links to the detailed docs** under `docs/agents/`. Link only files that were created. **Omit a row** if that area does not apply. Include a **"Start here"** column that suggests which docs to read first for common tasks.
+## Toolchain
 
-| Area | Link | Start here for… |
-|------|------|-----------------|
+| Action | Command | Notes |
+|---|---|---|
+| Build | `<command>` | <config file or output location> |
+| Test | `<command>` | <flags or prerequisites> |
+| Lint | `<command>` | <config file — do NOT describe what it enforces> |
+| <other> | `<command>` | <notes> |
+
+## Judgment Boundaries
+
+**NEVER**
+- <hard limits that require judgment, not tool enforcement>
+
+**ASK**
+- <human-in-the-loop triggers specific to this project>
+
+**ALWAYS**
+- <proactive judgment rules the agent should follow>
+
+## Context Map
+
+```yaml
+<only list directories/files that would surprise someone who knows the framework>
+<omit standard framework conventions the agent can infer>
+```
+
+## Human Reference
+
+Detailed documentation lives in `docs/agents/` — read on demand, not preloaded.
+
+| Area | File | Read when… |
+|------|------|------------|
 | Overview | `docs/agents/overview.md` | Orientation, architecture, cross-repo dependencies |
-| Infrastructure | `docs/agents/infrastructure.md` | CI/CD, deployment, environment config |
-| UI / frontend | `docs/agents/frontend.md` | Component changes, styling, accessibility |
-| Backend / API | `docs/agents/backend.md` | API changes, service boundaries, auth |
-| Database / data | `docs/agents/database.md` | Migrations, schema changes |
-| Testing | `docs/agents/testing.md` | Writing or running tests |
-| Security / auth | `docs/agents/authentication.md` | Auth flows, secrets policy |
-| Contributing / releases | `docs/agents/contributing.md` | PR process, versioning, code style |
+| <area> | `docs/agents/<file>.md` | <when to read> |
+```
 
-Also add rows for any **other existing** repo docs (wiki, `docs/`, OpenAPI, `CONTRIBUTING.md`) as supplementary links.
+**What does NOT belong in AGENTS.md:**
+- Tech stack lists (read `package.json`, `*.csproj`, `Cargo.toml`, etc.)
+- Full architecture descriptions (read the code)
+- Coding style rules enforced by linters/formatters (read tool configs)
+- File paths the agent can discover by listing directories
+- Content duplicated from README
 
-Use **relative Markdown links** from the repository root. One short line per link describing when an agent should read it.
+**What DOES belong in AGENTS.md:**
+- Domain constraints the code doesn't express (e.g. "offline-first", "ACID on all writes")
+- Architectural boundaries that are judgment calls (e.g. "no business logic in controllers")
+- Dangerous areas with outsized consequences (e.g. "billing module — changes require extra review")
+- Non-obvious conventions that differ from framework defaults
+- Cross-repo relationships not expressed in package dependencies
 
-**Tone:** Concise, scannable, imperative. No long pasted content from other files — prefer links.
+**Tone:** Concise, scannable, imperative. The entire file should fit in under 60 lines for most repos.
 
 ---
 
@@ -220,6 +261,7 @@ Before finishing, verify everything you wrote:
 2. **Command check** — every shell command (build, test, lint, run) must be runnable. Verify by reading `package.json` scripts, `Makefile` targets, `*.csproj` files, CI configs, etc. Don't invent commands.
 3. **Staleness check** — if updating existing docs, flag any sections that reference files, packages, or patterns that no longer exist in the repo.
 4. **Secret scan** — re-read all output files and confirm no real secrets, tokens, connection strings, or internal URLs leaked in.
+5. **AGENTS.md minimality check** — re-read `AGENTS.md` and remove anything the agent can discover from toolchain configs, `package.json`, directory structure, or README. If a linter enforces it, delete it from AGENTS.md.
 
 If validation finds issues, fix them before finishing. List any unresolvable issues at the bottom of `docs/agents/overview.md` under **Known gaps & risks**.
 
@@ -229,8 +271,11 @@ If validation finds issues, fix them before finishing. List any unresolvable iss
 
 - **Read before writing.** Don't assume — open files and verify.
 - **Be specific.** Use exact commands, exact paths, exact versions.
-- **Depth:** The `docs/agents/` files should be **detailed** (facts, paths, how things connect). `AGENTS.md` stays a **summary** with links.
+- **Minimal AGENTS.md.** The constitution carries only judgment-layer content. Everything else goes in `docs/agents/` as human reference.
+- **Detailed human reference.** The `docs/agents/` files should be substantive (facts, paths, how things connect) — they serve humans and on-demand agent reads.
+- **File size:** Aim for **100–300 lines** per `docs/agents/` file. Enough to be substantive, short enough to stay scannable. Split or trim if a file grows beyond this.
 - **Don't pad.** Skip files/rows that truly do not apply; skip generic filler that isn't repo-specific.
 - **Flag unknowns.** If you can't determine something, say so.
 - **Preserve existing docs.** If files already exist under `docs/agents/` or `AGENTS.md` exists, read first and improve rather than replacing blindly.
+- **Toolchain first.** If a constraint is enforced by a tool, the tool config is the authority — don't restate it in AGENTS.md.
 ```

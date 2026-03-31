@@ -45,7 +45,7 @@ Read the existing `AGENTS.md` at the workspace root. Update it with the discover
 
 3. Update the workspace name in the title if it is still a placeholder or generic. Use the workspace directory name.
 
-4. Keep all other sections (`Working Across Repos`, `Adding a New Repository`, etc.) intact — they are generic and should stay.
+4. Keep all other sections (Toolchain, Judgment Boundaries, Context Map, etc.) intact — they are part of the agent constitution and should stay.
 
 ---
 
@@ -67,6 +67,19 @@ For each repo:
 1. Change into the repo directory.
 2. Execute all phases from `prompts/audit.md` (Discovery, Write Documentation, Generate AGENTS.md, Validate).
 3. Return to the workspace root before moving to the next repo.
+
+> **Context limits:** For workspaces with many repositories (4+), auditing all repos in a single session may hit context limits and degrade output quality for later repos. In that case, audit repos individually by running `prompts/audit.md` from each repo's root in separate sessions.
+
+---
+
+### Phase 5: Cross-repo Dependency Summary
+
+After all audits are complete, review each repo's `docs/agents/overview.md` for the **Cross-repo dependencies** section. Compile a summary in the workspace `AGENTS.md` under the `## Cross-repo Dependencies` section:
+
+1. List each dependency relationship as: `<consumer>` → `<provider>` with a short description of what is consumed (package, API, shared library, event contract, etc.).
+2. If no cross-repo dependencies exist, note "No cross-repo dependencies detected" in that section.
+
+This gives agents a workspace-level view of how repos relate to each other.
 
 ---
 
