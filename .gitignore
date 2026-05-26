@@ -1,4 +1,6 @@
-# Cloned repositories (managed independently, populated by prompts/init.md)
+# Cloned repositories (managed independently, live under repos/)
+repos/*
+!repos/.gitkeep
 
 # OS
 .DS_Store

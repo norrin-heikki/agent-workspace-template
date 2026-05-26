@@ -20,17 +20,19 @@ A reusable template for managing multiple repositories under a single workspace.
 
    > **Alternative:** To preserve the ability to pull template updates later, keep the template remote and rename it instead: `git remote rename origin template`. Then add your own remote with `git remote add origin <your-repo-url>`.
 
-3. Clone the repositories into the workspace:
+3. Clone the repositories into the `repos/` directory:
 
    ```bash
-   git clone <repo-url> <directory-name>
+   git clone <repo-url> repos/<directory-name>
    ```
+
+   All cloned repositories live under `repos/` — the directory itself is tracked (via `repos/.gitkeep`), but its contents are gitignored.
 
 4. Run the initialization prompt (`prompts/init.md`) with an AI agent (Claude Code, Cursor, etc.) from the workspace root. It will:
 
-   - Discover all cloned repos
+   - Discover all cloned repos under `repos/`
    - Populate `AGENTS.md` with a repository table
-   - Add repos to `.gitignore`
+   - Verify `.gitignore` excludes `repos/*`
    - Audit each repo
 
 ## What Gets Generated
@@ -40,18 +42,22 @@ A reusable template for managing multiple repositories under a single workspace.
 | File | Purpose |
 |---|---|
 | `AGENTS.md` | **Agent constitution** — minimal, judgment-layer content only (toolchain commands, behavioral boundaries, context map). Symlinked as `CLAUDE.md`. |
-| `docs/agents/overview.md` | Human reference — project purpose, tech stack, key files, repo health, known gaps |
-| `docs/agents/infrastructure.md` | Human reference — CI/CD, Docker, cloud, env layout, observability |
-| `docs/agents/frontend.md` | Human reference — components, design system, styling, a11y, i18n |
-| `docs/agents/backend.md` | Human reference — services, API surface, auth, layering |
-| `docs/agents/database.md` | Human reference — migrations, schema conventions |
-| `docs/agents/testing.md` | Human reference — test frameworks, commands, fixtures, coverage |
-| `docs/agents/authentication.md` | Human reference — auth flows, secrets policy |
-| `docs/agents/contributing.md` | Human reference — PR process, versioning, code style |
+| `docs/agents/overview.md` | Architectural orientation — project purpose, tech stack, key files, repo health, known gaps |
+| `docs/agents/infrastructure.md` | Architectural orientation — CI/CD, Docker, cloud, env layout, observability |
+| `docs/agents/frontend.md` | Architectural orientation — components, design system, styling, a11y, i18n |
+| `docs/agents/backend.md` | Architectural orientation — services, API surface, auth, layering |
+| `docs/agents/database.md` | Architectural orientation — migrations, schema conventions |
+| `docs/agents/testing.md` | Architectural orientation — test frameworks, commands, fixtures, coverage |
+| `docs/agents/authentication.md` | Architectural orientation — auth flows, secrets policy |
+| `docs/agents/contributing.md` | Architectural orientation — PR process, versioning, code style |
+| `docs/specs/INVENTORY.md` | **Behavioral specs (Spec Reversing)** — feature inventory + prioritized backlog |
+| `docs/specs/<area>/<feature>.md` | **Behavioral specs (Spec Reversing)** — Blueprint+Contract per feature |
 
 Only applicable files are created — areas that don't apply are skipped.
 
-`AGENTS.md` is loaded into agent context automatically. `docs/agents/` files are **not** — they exist for humans and for agents to read on demand when they need detail on a specific area. This follows the ASDLC principle that unnecessary context actively harms agent performance.
+`AGENTS.md` is loaded into agent context automatically. `docs/agents/` and `docs/specs/` files are **not** — they exist for humans and for agents to read on demand when they need detail on a specific area or are about to modify a specific feature. This follows the ASDLC principle that unnecessary context actively harms agent performance.
+
+`docs/agents/` answers *"how is this codebase structured?"* (architectural orientation). `docs/specs/` answers *"what does this feature do, and what contract must I preserve?"* (behavioral specs derived via the ASDLC **Spec Reversing** pattern).
 
 ### At workspace root
 
@@ -59,17 +65,19 @@ Only applicable files are created — areas that don't apply are skipped.
 |---|---|
 | `AGENTS.md` | Workspace-level agent constitution — mission, toolchain, judgment boundaries, repo table, context map |
 | `CLAUDE.md` | Symlink to `AGENTS.md` (for Claude Code compatibility) |
-| `.gitignore` | Excludes cloned repos from the workspace git history |
+| `.gitignore` | Excludes the contents of `repos/` from the workspace git history |
+| `repos/` | Container directory for all cloned repositories; contents gitignored, folder preserved via `.gitkeep` |
 
 ## Design Principles
 
-This template follows the [ASDLC AGENTS.md Specification](https://asdlc.io/practices/agents-md-spec):
+This template follows the [ASDLC AGENTS.md Specification](https://asdlc.io/practices/agents-md-spec) and the [Spec Reversing pattern](https://asdlc.io/patterns/spec-reversing):
 
 - **Minimal by design** — `AGENTS.md` contains only what agents cannot discover from the repo itself
 - **Toolchain first** — if a linter, formatter, or type checker enforces a rule, it is not restated in `AGENTS.md`
 - **Judgment boundaries** — uses the NEVER/ASK/ALWAYS tier system for behavioral rules
 - **Context map** — only lists directories/files that would surprise someone who knows the framework
-- **Human reference separation** — detailed documentation lives in `docs/agents/`, not in the agent constitution
+- **Three-layer separation** — agent constitution (`AGENTS.md`), architectural orientation (`docs/agents/`), and behavioral specs (`docs/specs/`) are kept distinct. Only the constitution is loaded into context automatically.
+- **Spec Reversing for brownfield** — behavioral specs are derived from existing code via a two-phase workflow (inventory → drafts), with a human-review gate between phases to prevent canonizing bugs as features.
 
 ## Prompts
 
@@ -77,7 +85,9 @@ This template follows the [ASDLC AGENTS.md Specification](https://asdlc.io/pract
 |---|---|
 | [prompts/init.md](prompts/init.md) | First-time workspace setup, or when repos are added/removed |
 | [prompts/add-repo.md](prompts/add-repo.md) | Add a new repo — clone, register in AGENTS.md and .gitignore, audit |
-| [prompts/audit.md](prompts/audit.md) | Audit a single repo — run from that repo's root |
+| [prompts/audit.md](prompts/audit.md) | Audit a single repo — generates `AGENTS.md`, `docs/agents/`, and orchestrates spec reversing |
+| [prompts/spec-inventory.md](prompts/spec-inventory.md) | Spec Reversing Phase 1 — produce `docs/specs/INVENTORY.md` for a single repo |
+| [prompts/spec-drafts.md](prompts/spec-drafts.md) | Spec Reversing Phase 2 — produce per-feature Blueprint+Contract specs from the inventory |
 | [prompts/migrate-v2.md](prompts/migrate-v2.md) | One-time migration from original template to ASDLC-aligned v2 |
 
 ## Adding a New Repository
@@ -110,6 +120,8 @@ If you have an existing workspace initialized with the original (pre-ASDLC) temp
 
    - Extract your existing repository table and custom content
    - Rewrite the workspace `AGENTS.md` to the ASDLC anatomy
+   - Move cloned repositories from the workspace root into `repos/`
+   - Replace per-repo `.gitignore` entries with the `repos/*` block
    - Replace `CLAUDE.md` with a symlink to `AGENTS.md`
    - Re-audit each repo to generate minimal, judgment-layer `AGENTS.md` files
    - Update cross-repo dependency summary
@@ -128,17 +140,23 @@ To re-audit all repos, run `prompts/init.md` from the workspace root again.
 my-workspace/
 ├── AGENTS.md              # Workspace agent constitution (auto-populated)
 ├── CLAUDE.md              # Symlink → AGENTS.md
-├── .gitignore             # Excludes cloned repos (auto-populated)
+├── .gitignore             # Excludes repos/* (contents gitignored)
 ├── prompts/
 │   ├── init.md            # Workspace initialization prompt
 │   ├── add-repo.md        # Add a new repo prompt
-│   ├── audit.md           # Single-repo audit prompt
-│   └── migrate-v2.md     # One-time migration prompt
-├── repo-a/                # Cloned repo (gitignored)
-│   ├── AGENTS.md          # Agent constitution (minimal, judgment-layer)
-│   └── docs/agents/       # Human reference docs (detailed, on-demand)
-├── repo-b/                # Cloned repo (gitignored)
-│   ├── AGENTS.md
-│   └── docs/agents/
-└── ...
+│   ├── audit.md           # Single-repo audit prompt (orchestrates spec reversing)
+│   ├── spec-inventory.md  # Spec Reversing Phase 1 — feature inventory
+│   ├── spec-drafts.md     # Spec Reversing Phase 2 — per-feature specs
+│   └── migrate-v2.md      # One-time migration prompt
+└── repos/                 # Container for cloned repos (contents gitignored)
+    ├── .gitkeep           # Keeps the directory in git
+    ├── repo-a/            # Cloned repo
+    │   ├── AGENTS.md      # Agent constitution (minimal, judgment-layer)
+    │   ├── docs/agents/   # Architectural orientation (on-demand)
+    │   └── docs/specs/    # Behavioral specs (Spec Reversing — on-demand)
+    ├── repo-b/            # Cloned repo
+    │   ├── AGENTS.md
+    │   ├── docs/agents/
+    │   └── docs/specs/
+    └── ...
 ```
