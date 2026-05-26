@@ -38,6 +38,19 @@ Work through the following phases. Be thorough — read actual files, don't gues
 
 ---
 
+### Phase 0: Sync with remote
+
+Audits must run against the current state of the branch. Before doing any reading or writing:
+
+1. Run `git status`. If the working tree is dirty (uncommitted changes), **stop and ask the user** — do not pull on top of uncommitted work, and do not stash it without explicit permission. Resume only after the tree is clean or the user has confirmed it is safe to proceed as-is.
+2. Run `git fetch` to refresh remote-tracking branches.
+3. If the current branch tracks an upstream and is behind it, run `git pull --ff-only`. If the pull is not a fast-forward (diverged history, conflicts), **stop and ask the user** — never force-pull or merge without explicit permission.
+4. Record the commit SHA being audited (`git rev-parse HEAD`) — include it in the `## Changelog` line of any file you update so reviewers know which revision the audit reflects.
+
+If the repo has no remote, skip steps 2–3 and note "local-only repo, no remote to sync" in the changelog.
+
+---
+
 ### Phase 1: Discovery
 
 Explore the repository and gather facts. For each item below, read the relevant files (don't just list directory names).

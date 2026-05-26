@@ -11,6 +11,16 @@ You are drafting full specs for every feature listed in `docs/specs/INVENTORY.md
 
 Determine the repository name from the current working directory.
 
+## Phase 0: Sync with remote
+
+Before any reading or writing:
+
+1. Run `git status`. If the working tree is dirty, **stop and ask the user** — do not pull on top of uncommitted work, and do not stash without explicit permission.
+2. Run `git fetch`, then `git pull --ff-only` if the current branch is behind its upstream. If the pull is not a fast-forward, **stop and ask the user**.
+3. Confirm `INVENTORY.md`'s recorded HEAD SHA (if present) matches `git rev-parse HEAD`. If the inventory was produced against an older revision, **stop and ask the user** whether to re-run `prompts/spec-inventory.md` first or proceed with the existing inventory.
+
+If the repo has no remote, skip step 2 and proceed.
+
 ## Reference material
 
 If the **ASDLC skill** is available in your environment, consult it — specifically **The Spec** pattern and the **Spec Reversing** pattern. If not, the key directives are summarized inline below; that is enough to complete this task.

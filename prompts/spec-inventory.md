@@ -11,6 +11,16 @@ You are auditing this repository to produce a feature inventory and a prioritize
 
 Determine the repository name from the current working directory.
 
+## Phase 0: Sync with remote
+
+Before any reading or writing:
+
+1. Run `git status`. If the working tree is dirty, **stop and ask the user** — do not pull on top of uncommitted work, and do not stash without explicit permission.
+2. Run `git fetch`, then `git pull --ff-only` if the current branch is behind its upstream. If the pull is not a fast-forward, **stop and ask the user**.
+3. Record `git rev-parse HEAD` and include it at the top of the generated `INVENTORY.md` so reviewers know which revision the inventory reflects.
+
+If the repo has no remote, skip steps 2 and note "local-only repo" in the inventory header.
+
 ## Reference material
 
 If the **ASDLC skill** is available in your environment, consult it — specifically the **Spec Reversing** pattern and **The Spec** pattern. If not, the key directives are summarized inline below; that is enough to complete this task.
